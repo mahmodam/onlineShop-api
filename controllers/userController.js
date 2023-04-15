@@ -4,11 +4,20 @@ const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail");
 const crypto = require("crypto");
 
+const cloudinary = require("cloudinary");
+
 // desc: Register a user
 // route: POST /api/register
 // access: Public
 const registerUser = async (req, res, next) => {
   try {
+    // crop: "scale" sets the image to be cropped to the exact dimensions specified by width and height.
+    const result = await cloudinary.v2.uploader.upload(req.body.avatar, {
+      folder: "avatars",
+      width: "150",
+      crop: "scale",
+    });
+
     const { name, email, password } = req.body;
 
     const user = await User.create({
@@ -16,8 +25,8 @@ const registerUser = async (req, res, next) => {
       email,
       password,
       avatar: {
-        public_id: "avatars/default_avatar",
-        url: "https://res.cloudinary.com/dh6y8k1xk/image/upload/v1634223105/avatars/default_avatar.png",
+        public_id: result.public_id,
+        url: result.secure_url,
       },
     });
 
@@ -107,7 +116,24 @@ const updateProfile = async (req, res, next) => {
       email: req.body.email,
     };
 
-    // Update avatar: TODO
+    // Update avatar
+    if (req.body.avatar !== "") {
+      const user = await User.findById(req.user.id);
+
+      const image_id = user.avatar.public_id;
+      const res = await cloudinary.v2.uploader.destroy(image_id);
+
+      const result = await cloudinary.v2.uploader.upload(req.body.avatar, {
+        folder: "avatars",
+        width: "150",
+        crop: "scale",
+      });
+
+      newUserData.avatar = {
+        public_id: result.public_id,
+        url: result.secure_url,
+      };
+    }
 
     const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
       new: true,
