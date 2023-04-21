@@ -13,6 +13,7 @@ const cloudinary = require("cloudinary");
 const products = require("./routes/product");
 const users = require("./routes/user");
 const order = require("./routes/order");
+const payment = require("./routes/payment");
 
 const dotenv = require("dotenv");
 dotenv.config({ path: "./config/config.env" });
@@ -36,6 +37,7 @@ cloudinary.config({
 
 app.use("/api", products);
 app.use("/api", users);
+app.use("/api", payment);
 app.use("/api", order);
 
 // Middleware to handle errors
