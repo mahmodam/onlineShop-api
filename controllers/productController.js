@@ -147,6 +147,11 @@ const deleteProduct = async (req, res) => {
       return next(new ErrorHandler("Product not found", 404));
     }
 
+    // Delete images associated with the product
+    for (let i = 0; i < product.images.length; i++) {
+      await cloudinary.v2.uploader.destroy(product.images[i].public_id);
+    }
+
     await product.deleteOne();
 
     res.status(200).json({
