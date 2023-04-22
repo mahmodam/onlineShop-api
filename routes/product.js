@@ -13,6 +13,7 @@ const {
   createProductReview,
   getProductReviews,
   deleteReview,
+  getAdminProducts,
 } = require("../controllers/productController");
 
 // @desc    Fetch all products
@@ -41,6 +42,13 @@ router.route("/reviews").get(isAuthUser, getProductReviews);
 router.route("/reviews").delete(isAuthUser, deleteReview);
 
 // Admin Routes
+
+// @desc    Fetch all products
+// @route   GET /api/admin/products
+// @access  Private
+router
+  .route("/admin/products")
+  .get(isAuthUser, authorizeRoles("admin"), getAdminProducts);
 
 // @desc    Create a product
 // @route   POST /api/admin/products

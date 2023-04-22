@@ -4,11 +4,38 @@ const ErrorHandler = require("../utils/errorHandler");
 
 const APIFeatures = require("../utils/apiFeatures");
 
+const cloudinary = require("cloudinary");
+
 // desc: Create new product
 // route: POST /api/admin/products
 // access: Private
 const createProduct = async (req, res, next) => {
   try {
+    let images = [];
+
+    if (typeof req.body.images === "string") {
+      // if there is only one image
+      images.push(req.body.images);
+    } else {
+      // if there are multiple images
+      images = req.body.images;
+    }
+
+    let imagesLinks = [];
+
+    for (let i = 0; i < images.length; i++) {
+      const result = await cloudinary.v2.uploader.upload(images[i], {
+        folder: "products",
+      });
+
+      imagesLinks.push({
+        public_id: result.public_id,
+        url: result.secure_url,
+      });
+    }
+
+    req.body.images = imagesLinks;
+
     req.body.user = req.user.id;
 
     const product = await Product.create(req.body);
@@ -41,6 +68,22 @@ const getProducts = async (req, res, next) => {
       success: true,
       resPerPage,
       productsCount,
+      products,
+    });
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 500));
+  }
+};
+
+// desc: Get all products (Admin)
+// route: GET /api/admin/products
+// access: Private
+const getAdminProducts = async (req, res, next) => {
+  try {
+    const products = await Product.find();
+
+    res.status(200).json({
+      success: true,
       products,
     });
   } catch (error) {
@@ -225,4 +268,5 @@ module.exports = {
   createProductReview,
   getProductReviews,
   deleteReview,
+  getAdminProducts,
 };
