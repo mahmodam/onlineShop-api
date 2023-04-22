@@ -122,6 +122,40 @@ const updateProduct = async (req, res, next) => {
       return next(new ErrorHandler("Product not found", 404));
     }
 
+    let images = [];
+
+    if (typeof req.body.images === "string") {
+      // if there is only one image
+      images.push(req.body.images);
+    } else {
+      // if there are multiple images
+      images = req.body.images;
+    }
+
+    // if there are old images
+    if (images !== undefined) {
+      // Delete old images
+      for (let i = 0; i < product.images.length; i++) {
+        await cloudinary.v2.uploader.destroy(product.images[i].public_id);
+      }
+
+      let imagesLinks = [];
+
+      // then upload new images
+      for (let i = 0; i < images.length; i++) {
+        const result = await cloudinary.v2.uploader.upload(images[i], {
+          folder: "products",
+        });
+
+        imagesLinks.push({
+          public_id: result.public_id,
+          url: result.secure_url,
+        });
+      }
+
+      req.body.images = imagesLinks;
+    }
+
     product = await Product.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
