@@ -54,7 +54,7 @@ const createProduct = async (req, res, next) => {
 // access: Public
 const getProducts = async (req, res, next) => {
   try {
-    const resPerPage = 4;
+    const resPerPage = 8;
     const productsCount = await Product.countDocuments();
 
     const apiFeatures = new APIFeatures(Product.find(), req.query)
