@@ -192,16 +192,27 @@ const getUserDetails = async (req, res, next) => {
 // access: Private
 const adminUpdateUser = async (req, res, next) => {
   try {
+    const id = req.params.id;
     const newUserData = {
       name: req.body.name,
       email: req.body.email,
       role: req.body.role,
     };
 
-    const user = await User.findOneAndUpdate(req.params.id, newUserData, {
-      new: true,
-      runValidators: true,
-      useFindAndModify: false,
+    // const user = await User.findOneAndUpdate(req.params.id, newUserData, {
+    //   new: true,
+    //   runValidators: true,
+    //   useFindAndModify: false,
+    // });
+
+    // יש לעדכן את האיימיל בצורה הזאת
+    //findOneAndUpdate לא יעבוד כי הוא לא מעדכן את האיימיל בצורה הזאת
+    const user = await User.findById(id).then((user) => {
+      user.name = newUserData.name;
+      user.email = newUserData.email;
+      user.role = newUserData.role;
+
+      user.save();
     });
 
     res.status(200).json({
@@ -226,8 +237,10 @@ const deleteUser = async (req, res, next) => {
     }
 
     // Remove avatar from cloudinary: TODO
+    const image_id = user.avatar.public_id;
+    await cloudinary.v2.uploader.destroy(image_id);
 
-    await user.remove();
+    await user.deleteOne(user);
 
     res.status(200).json({
       success: true,
